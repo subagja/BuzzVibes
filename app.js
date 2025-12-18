@@ -68,24 +68,24 @@ function generate3Drafts({ context, guide, tone }) {
 
   const bank = {
     formal: [
-      `${topic}saya menilai isu ini perlu dibahas secara objektif dan proporsional. Terima kasih atas informasinya.`,
-      `${topic}terima kasih telah berbagi. Akan lebih kuat apabila disertai rujukan atau data pendukung yang jelas.`,
-      `${topic}semoga diskusi ini mendorong langkah yang konstruktif, serta tetap mengedepankan etika dan ketertiban.`
+      `${topic}Isu ini valid dan perlu dibahas secara objektif. Makasih infonya.`,
+      `${topic}Nice share. Bakal lebih kuat kalau ada data pendukungnya.`,
+      `${topic}Semoga diskusinya tetap sehat dan mengedepankan etika.`
     ],
     netral: [
-      `${topic}poinnya menarik untuk dicermati lebih lanjut. Semoga diskusinya tetap sehat.`,
-      `${topic}terima kasih sudah berbagi perspektif. Ini bisa jadi bahan pertimbangan yang bermanfaat.`,
-      `${topic}akan bagus jika pembahasan fokus pada fakta dan solusi agar tidak menimbulkan salah paham.`
+      `${topic}Menarik buat disimak. Semoga diskusinya tetap adem.`,
+      `${topic}Makasih perspektifnya, bisa jadi bahan pertimbangan nih.`,
+      `${topic}Fokus ke fakta aja yuk biar nggak salah paham.`
     ],
     santai: [
-      `${topic}menarik nih. Semoga bahasannya tetap adem dan jelas ya.`,
-      `${topic}makasih udah share. Jadi nambah perspektif.`,
-      `${topic}poinnya dapet sih. Biar makin kuat, enak juga kalau ada data/contoh.`
+      `${topic}Menarik nih, pantau terus biar jelas.`,
+      `${topic}Thanks infonya, lumayan nambah insight.`,
+      `${topic}Poinnya dapet, spill dong data atau contohnya.`
     ],
     tegas: [
-      `${topic}ini sebaiknya disikapi serius. Mohon klarifikasi data dan langkah konkret agar tidak memicu spekulasi.`,
-      `${topic}kalau ini benar, dampaknya bisa besar. Perlu penjelasan yang transparan dan terukur.`,
-      `${topic}mari fokus pada fakta dan solusi. Hindari narasi yang berpotensi memecah-belah.`
+      `${topic}Ini serius, butuh klarifikasi biar nggak jadi bola liar.`,
+      `${topic}Kalau bener, dampaknya gede. Perlu penjelasan transparan.`,
+      `${topic}Fokus ke solusi aja, jangan bikin narasi yang memecah belah.`
     ]
   };
 
