@@ -165,7 +165,7 @@ btnPolish.addEventListener("click", async () => {
           btnPolish.disabled = false;
         }
       };
-
+      console.log("AI WORKER v3 LOADED");
       aiWorker.postMessage({ type: "init" });
       return; // tunggu ready
     }
