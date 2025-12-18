@@ -9,21 +9,21 @@
 <body>
   <main class="wrap">
     <h1>Generator Komentar</h1>
-    <p class="sub">Buat komentar cepat, rapi, dan aman. Posting tetap manual.</p>
+    <p class="sub">Generate komentar cepat. Posting tetap manual.</p>
 
     <label>Link Postingan (opsional)</label>
-    <input id="linkInput" placeholder="https://...">
+    <input id="link" placeholder="https://...">
 
     <label>Konteks / Ringkasan (opsional)</label>
-    <textarea id="contextInput"
-      placeholder="Contoh: Video membahas kritik terhadap penanganan bencana di Sumatera..."></textarea>
+    <textarea id="context"
+      placeholder="Ringkasan singkat isi postingan..."></textarea>
 
     <label>Guideline / Arahan (wajib)</label>
-    <textarea id="guideInput"
+    <textarea id="guide"
       placeholder="Contoh: sopan, netral, max 40 kata, hindari provokasi"></textarea>
 
-    <label>Tone / Gaya (opsional)</label>
-    <select id="toneInput">
+    <label>Tone (opsional)</label>
+    <select id="tone">
       <option value="netral">Netral</option>
       <option value="formal">Formal</option>
       <option value="santai">Santai</option>
@@ -31,12 +31,12 @@
     </select>
 
     <div class="row">
-      <button id="btnGenerate">Generate 3 Draft</button>
-      <button id="btnOpen" disabled>Buka Link</button>
+      <button id="gen">Generate 3 Draft</button>
+      <button id="open" disabled>Buka Link</button>
     </div>
 
     <div id="status" class="status"></div>
-    <section id="result"></section>
+    <section id="out"></section>
   </main>
 
   <script src="app.js"></script>
