@@ -1,3 +1,6 @@
+console.log("UI VERSION: CF-WORKER-2025-12-18");
+document.title = "Generator Komentar (CF-WORKER-2025-12-18)";
+
 const WORKER_URL = "https://buzzvibes.adisubagja300.workers.dev"; // GANTI
 
 const $ = (id) => document.getElementById(id);
