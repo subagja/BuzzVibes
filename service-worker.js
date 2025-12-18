@@ -1,4 +1,4 @@
-const CACHE = "komentarai-v1";
+const CACHE = "komentarai-v2";
 const ASSETS = [
   "./",
   "./index.html",
