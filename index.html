@@ -4,18 +4,51 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Generator Komentar</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ffffff" />
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main style="max-width:720px;margin:auto;padding:16px;font-family:system-ui">
+  <main class="wrap">
     <h1>Generator Komentar</h1>
-    <p>Paste guideline → generate draft → copy → post manual.</p>
+    <p class="sub">Paste link + guideline → generate 3 draft → copy → post manual.</p>
 
-    <label>Guideline</label><br/>
-    <textarea id="guide" style="width:100%;height:90px"></textarea><br/><br/>
+    <label>Link Postingan (opsional)</label>
+    <input id="linkInput" placeholder="https://..." inputmode="url" />
 
-    <button onclick="generate()">Generate</button>
-    <div id="out" style="margin-top:12px"></div>
+    <label>Context/Judul/Cuplikan (opsional tapi disarankan)</label>
+    <textarea id="contextInput" placeholder="Contoh: Post membahas kebijakan X dan dampaknya..."></textarea>
+
+    <label>Guideline/Arahan (wajib)</label>
+    <textarea id="guideInput" placeholder="Contoh: sopan, tidak provokatif, max 40 kata, tanpa hinaan..."></textarea>
+
+    <label>Tone/Gaya (opsional)</label>
+    <select id="toneSelect">
+      <option value="">Auto (netral)</option>
+      <option value="formal">Formal</option>
+      <option value="netral">Netral</option>
+      <option value="santai">Santai</option>
+      <option value="tegas">Tegas tapi sopan</option>
+    </select>
+
+    <div class="row">
+      <button id="btnGenerate">Generate 3 Draft</button>
+      <button id="btnOpen" class="ghost" disabled>Buka Link</button>
+    </div>
+
+    <div class="row">
+      <button id="btnPolish" class="ghost" disabled>Polish dengan AI (opsional)</button>
+    </div>
+
+    <div id="status" class="status"></div>
+    <section id="result" class="result"></section>
+
+    <footer class="foot">
+      <small>Catatan: posting tetap manual. AI opsional berjalan di device (model akan diunduh saat pertama dipakai).</small>
+    </footer>
   </main>
 
   <script src="app.js"></script>
