@@ -1,52 +1,85 @@
+const WORKER_URL = "https://buzzvibes.adisubagja300.workers.dev"; // GANTI
+
 const $ = (id) => document.getElementById(id);
 
-const linkInput = $("linkInput");
-const contextInput = $("contextInput");
-const guideInput = $("guideInput");
-const toneInput = $("toneInput");
-
-const btnGenerate = $("btnGenerate");
-const btnOpen = $("btnOpen");
+const linkEl = $("link");
+const ctxEl = $("context");
+const guideEl = $("guide");
+const toneEl = $("tone");
+const genBtn = $("gen");
+const openBtn = $("open");
 const statusEl = $("status");
-const resultEl = $("result");
+const outEl = $("out");
 
-let worker = new Worker("./workers/polish.worker.js");
+genBtn.onclick = async () => {
+  const link = linkEl.value.trim();
+  const context = ctxEl.value.trim();
+  const guideline = guideEl.value.trim();
+  const tone = toneEl.value;
 
-btnGenerate.onclick = () => {
-  const guide = guideInput.value.trim();
-  if (!guide) return alert("Guideline wajib diisi.");
-
-  const link = linkInput.value.trim();
-  if (link) {
-    btnOpen.disabled = false;
-    btnOpen.onclick = () => window.open(link, "_blank");
+  if (!guideline) {
+    alert("Guideline wajib diisi.");
+    return;
   }
 
-  statusEl.textContent = "Menyusun draft komentar…";
-  resultEl.innerHTML = "";
+  if (link) {
+    openBtn.disabled = false;
+    openBtn.onclick = () => window.open(link, "_blank");
+  } else {
+    openBtn.disabled = true;
+  }
 
-  worker.postMessage({
-    tone: toneInput.value,
-    context: contextInput.value,
-    guideline: guide
-  });
+  statusEl.textContent = "Menghubungi AI…";
+  outEl.innerHTML = "";
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ link, context, guideline, tone })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error(data);
+      statusEl.textContent = "Gagal generate.";
+      alert("Gagal generate. Cek console/log.");
+      return;
+    }
+
+    renderDrafts(data.drafts || []);
+    statusEl.textContent = "Draft siap.";
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = "Koneksi gagal.";
+    alert("Tidak bisa terhubung ke server.");
+  }
 };
 
-worker.onmessage = (e) => {
-  const drafts = e.data;
-  statusEl.textContent = "Draft siap.";
-
-  drafts.forEach((t) => {
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `
-      <p>${t}</p>
+function renderDrafts(drafts) {
+  outEl.innerHTML = "";
+  drafts.forEach((text) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <p>${escapeHtml(text)}</p>
       <button>Copy</button>
     `;
-    div.querySelector("button").onclick = () => {
-      navigator.clipboard.writeText(t);
-      statusEl.textContent = "Komentar disalin.";
+    card.querySelector("button").onclick = async () => {
+      await navigator.clipboard.writeText(text);
+      statusEl.textContent = "Tersalin ke clipboard.";
     };
-    resultEl.appendChild(div);
+    outEl.appendChild(card);
   });
-};
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[c]));
+}
