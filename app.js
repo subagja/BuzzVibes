@@ -2,7 +2,6 @@ console.log("UI VERSION: CF-WORKER-2025-12-18");
 document.title = "Generator Komentar (CF-WORKER-2025-12-18)";
 
 const WORKER_URL = "https://buzzvibes.adisubagja300.workers.dev"; // GANTI
-
 const $ = (id) => document.getElementById(id);
 
 const linkEl = $("link");
@@ -30,6 +29,7 @@ genBtn.onclick = async () => {
     openBtn.onclick = () => window.open(link, "_blank");
   } else {
     openBtn.disabled = true;
+    openBtn.onclick = null;
   }
 
   statusEl.textContent = "Menghubungi AI…";
@@ -42,21 +42,31 @@ genBtn.onclick = async () => {
       body: JSON.stringify({ link, context, guideline, tone })
     });
 
-    const data = await res.json();
+    // PARSING AMAN: text dulu, baru coba JSON
+    const raw = await res.text();
+    let data = {};
+    try { data = JSON.parse(raw); } catch { data = { raw }; }
 
     if (!res.ok) {
-      console.error(data);
+      console.error("Worker error:", data);
       statusEl.textContent = "Gagal generate.";
-      alert("Gagal generate. Cek console/log.");
+      alert(data?.error ? `${data.error}` : "Gagal generate. Cek console/log.");
       return;
     }
 
-    renderDrafts(data.drafts || []);
+    if (!Array.isArray(data.drafts)) {
+      console.error("Unexpected response:", data);
+      statusEl.textContent = "Respon server tidak sesuai.";
+      alert("Worker tidak mengembalikan JSON drafts. Cek kode Worker.");
+      return;
+    }
+
+    renderDrafts(data.drafts);
     statusEl.textContent = "Draft siap.";
   } catch (err) {
-    console.error(err);
+    console.error("Network/Fetch error:", err);
     statusEl.textContent = "Koneksi gagal.";
-    alert("Tidak bisa terhubung ke server.");
+    alert("Tidak bisa terhubung ke Worker. Cek URL Worker & koneksi.");
   }
 };
 
