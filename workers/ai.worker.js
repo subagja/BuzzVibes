@@ -10,7 +10,7 @@ self.onmessage = async (e) => {
       self.postMessage({ type: "status", payload: { message: "Download model AI (sekali saja)…" } });
 
       // Model instruksi kecil (tetap lumayan berat). Jika terlalu lambat, nanti kita ganti.
-      generator = await pipeline("text2text-generation", "Xenova/LaMini-Flan-T5-248M");
+      generator = await pipeline("text2text-generation", "Xenova/mt5-small");
 
       self.postMessage({ type: "ready" });
       return;
@@ -25,12 +25,17 @@ self.onmessage = async (e) => {
       for (const d of drafts) {
         const prompt = buildPrompt({ tone, guideline, context, draft: d });
 
-        const out = await generator(prompt, {
-          max_new_tokens: 80,
-          temperature: 0.7
-        });
+      const out = await generator(prompt, {
+        max_new_tokens: 70,
+        do_sample: false,
+        num_beams: 3,
+        repetition_penalty: 1.1
+      });
+
 
         const text = (out?.[0]?.generated_text || "").trim();
+        text = text.replace(/^KELUARAN\s*:\s*/i, "").replace(/^Output\s*:\s*/i, "").trim();
+        text = text.replace(/^"|"$/g, "").trim(); // buang kutip depan-belakang
         polished.push(text || d);
       }
 
@@ -44,13 +49,21 @@ self.onmessage = async (e) => {
 
 function buildPrompt({ tone, guideline, context, draft }) {
   const t = tone || "netral";
-  const ctx = context ? `Konteks: ${context}\n` : "";
+  const ctx = context ? `Konteks singkat: ${context}\n` : "";
   const g = guideline ? `Guideline: ${guideline}\n` : "";
 
   return `
-Tugas: Rapikan dan variasikan komentar bahasa Indonesia agar sesuai tone "${t}".
+TUGAS: Tulis ulang (rewrite) komentar berikut agar terdengar NATURAL dalam Bahasa Indonesia.
+ATURAN:
+- Pertahankan makna inti (jangan menambah klaim fakta baru).
+- 1–2 kalimat, ringkas, sopan, tidak provokatif.
+- Tone: ${t}.
+- Hindari kata kaku/robotik, hindari "Sebagai AI", hindari bullet/nomor.
 ${ctx}${g}
-Komentar awal: ${draft}
-Keluaran: 1 komentar singkat, sopan, tidak provokatif, tanpa menambah klaim fakta baru.
+KOMENTAR AWAL:
+${draft}
+
+KELUARAN (hanya komentarnya saja):
 `.trim();
 }
+
