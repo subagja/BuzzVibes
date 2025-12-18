@@ -10,7 +10,7 @@ const btnOpen = $("btnOpen");
 const statusEl = $("status");
 const resultEl = $("result");
 
-let worker = new Worker("./workers/polish.worker.js");
+new Worker("./workers/polish.worker.js");
 
 btnGenerate.onclick = () => {
   const guide = guideInput.value.trim();
