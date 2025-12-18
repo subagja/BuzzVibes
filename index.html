@@ -1,54 +1,42 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Generator Komentar</title>
-
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#ffffff" />
-
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="wrap">
     <h1>Generator Komentar</h1>
-    <p class="sub">Paste link + guideline → generate 3 draft → copy → post manual.</p>
+    <p class="sub">Buat komentar cepat, rapi, dan aman. Posting tetap manual.</p>
 
     <label>Link Postingan (opsional)</label>
-    <input id="linkInput" placeholder="https://..." inputmode="url" />
+    <input id="linkInput" placeholder="https://...">
 
-    <label>Context/Judul/Cuplikan (opsional tapi disarankan)</label>
-    <textarea id="contextInput" placeholder="Contoh: Post membahas kebijakan X dan dampaknya..."></textarea>
+    <label>Konteks / Ringkasan (opsional)</label>
+    <textarea id="contextInput"
+      placeholder="Contoh: Video membahas kritik terhadap penanganan bencana di Sumatera..."></textarea>
 
-    <label>Guideline/Arahan (wajib)</label>
-    <textarea id="guideInput" placeholder="Contoh: sopan, tidak provokatif, max 40 kata, tanpa hinaan..."></textarea>
+    <label>Guideline / Arahan (wajib)</label>
+    <textarea id="guideInput"
+      placeholder="Contoh: sopan, netral, max 40 kata, hindari provokasi"></textarea>
 
-    <label>Tone/Gaya (opsional)</label>
-    <select id="toneSelect">
-      <option value="">Auto (netral)</option>
-      <option value="formal">Formal</option>
+    <label>Tone / Gaya (opsional)</label>
+    <select id="toneInput">
       <option value="netral">Netral</option>
+      <option value="formal">Formal</option>
       <option value="santai">Santai</option>
       <option value="tegas">Tegas tapi sopan</option>
     </select>
 
     <div class="row">
       <button id="btnGenerate">Generate 3 Draft</button>
-      <button id="btnOpen" class="ghost" disabled>Buka Link</button>
-    </div>
-
-    <div class="row">
-      <button id="btnPolish" class="ghost" disabled>Polish dengan AI (opsional)</button>
+      <button id="btnOpen" disabled>Buka Link</button>
     </div>
 
     <div id="status" class="status"></div>
-    <section id="result" class="result"></section>
-
-    <footer class="foot">
-      <small>Catatan: posting tetap manual. AI opsional berjalan di device (model akan diunduh saat pertama dipakai).</small>
-    </footer>
+    <section id="result"></section>
   </main>
 
   <script src="app.js"></script>
