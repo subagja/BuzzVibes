@@ -66,7 +66,7 @@ genBtn.onclick = async () => {
   } catch (err) {
     console.error("Network/Fetch error:", err);
     statusEl.textContent = "Koneksi gagal.";
-    alert("Tidak bisa terhubung ke Worker. Cek URL Worker & koneksi.");
+    alert("Fetch gagal: " + (err?.message || err));
   }
 };
 
