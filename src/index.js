@@ -12,114 +12,131 @@ export default {
       return json({ ok: true, message: "Worker is running" }, 200, cors);
     }
 
-    if (request.method !== "POST") {
-      return json({ error: "Use POST" }, 405, cors);
-    }
+    if (request.method !== "POST") return json({ error: "Use POST" }, 405, cors);
 
     let body = {};
-    try {
-      body = await request.json();
-    } catch {
-      return json({ error: "Invalid JSON body" }, 400, cors);
-    }
+    try { body = await request.json(); }
+    catch { return json({ error: "Invalid JSON body" }, 400, cors); }
 
     const taskText = String(body.taskText || "").trim();
-    const personas = Array.isArray(body.personas) ? body.personas : [];
-    const tone = personas.length > 0 ? personas.join(", ") : "netral";
+    const personas = Array.isArray(body.personas) ? body.personas.map(String) : [];
+    const autoVariation = !!body.autoVariation;
 
     if (!taskText) return json({ error: "taskText wajib" }, 400, cors);
-    if (!env.OPENAI_API_KEY) return json({ error: "Missing OPENAI_API_KEY secret" }, 500, cors);
 
     const urls = uniq(extractUrls(taskText));
-    if (urls.length === 0) {
-      return json({ error: "Tidak ada link ditemukan dalam teks." }, 400, cors);
-    }
+    if (urls.length === 0) return json({ error: "Tidak ada link ditemukan dalam teks." }, 400, cors);
 
     const contextHint = deriveContextHint(taskText);
 
-    const items = [];
-    for (const url of urls) {
-      const drafts = await generateDrafts({
-        env,
+    const items = urls.map((url, i) => {
+      const personaVal = pickPersona(personas, i); // bisa preset key atau custom text
+      const persona = resolvePersona(personaVal);
+
+      const drafts = makeDrafts({
         url,
-        context: contextHint,
-        guideline: taskText,
-        tone,
+        contextHint,
+        persona,
+        autoVariation,
+        seed: hash(url + "|" + i + "|" + personaVal),
       });
 
-      items.push({ url, drafts });
-    }
+      return {
+        url,
+        personaLabel: persona.label,
+        drafts,
+      };
+    });
 
     return json({ items }, 200, cors);
   }
 };
 
-// ===== OpenAI generator (PROMPT SAMA DENGAN index1.js) =====
-async function generateDrafts({ env, url, context, guideline, tone }) {
-  const prompt = `
-Kamu adalah asisten yang membuat komentar media sosial berbahasa Indonesia.
+// ===== Persona rules =====
+const PERSONA_RULES = {
+  netral: {
+    label: "Netral",
+    openings: ["Menarik nih.", "Semoga makin jelas ya.", "Setuju untuk tetap tenang."],
+    emojis: ["", ""],
+  },
+  santai_bangga: {
+    label: "Netizen santai & bangga",
+    openings: ["Mantap sih.", "Keren juga ya.", "Gas terus."],
+    emojis: ["🙌", "✨", "🔥", ""],
+  },
+  nasionalis_tenang: {
+    label: "Nasionalis tenang",
+    openings: ["Yang penting tetap rukun.", "Kita jaga kekompakan.", "Semoga tetap bersatu."],
+    emojis: ["🇮🇩", ""],
+  },
+  rasional: {
+    label: "Rasional",
+    openings: ["Kalau dipikir logis,", "Dari sisi penalaran,", "Yang penting lihat intinya,"],
+    emojis: [""],
+  },
+  pro_logika: {
+    label: "Pro-logika",
+    openings: ["Coba runtut ya:", "Sebab-akibatnya jelas:", "Kalau tujuannya efektif,"],
+    emojis: [""],
+  },
+  historis_reflektif: {
+    label: "Historis & reflektif",
+    openings: ["Dari pengalaman kita,", "Pelajaran pentingnya,", "Sejarah sering mengingatkan,"],
+    emojis: ["", ""],
+  },
+  humanis: {
+    label: "Humanis",
+    openings: ["Semoga semuanya aman.", "Yang utama keselamatan orang-orang.", "Turut prihatin, semoga cepat pulih."],
+    emojis: ["🙏", "💙", ""],
+  },
+};
 
-TUGAS:
-Buat 3 draft komentar untuk sebuah postingan.
+function resolvePersona(val) {
+  if (!val) return PERSONA_RULES.netral;
+  const key = String(val).trim();
+  if (PERSONA_RULES[key]) return PERSONA_RULES[key];
 
-ATURAN WAJIB:
-- Bahasa Indonesia saja.
-- 1–2 kalimat per draft.
-- Sopan, tidak provokatif, tidak menambah klaim/fakta baru.
-- Hindari kata-kata: "Tugas:", "Konteks:", "Output:", "The text...", dan penjelasan meta.
-- Tone: ${tone}
-- Ikuti guideline pengguna.
+  // custom persona: kita map ke gaya netral tapi label sesuai input user
+  return {
+    label: key, // tampilkan “marah”, “formal banget”, dll
+    openings: [`(${key})`, "Oke.", "Saya lihat begini:"],
+    emojis: ["", ""],
+  };
+}
 
-INPUT:
-Link (opsional): ${url}
-Konteks (opsional): ${context}
-Guideline: ${guideline}
+// ===== Draft generator (singkat ala komentar) =====
+function makeDrafts({ contextHint, persona, autoVariation, seed }) {
+  const basePoints = [
+    "Semoga pembahasannya tetap fokus dan jelas.",
+    "Lebih baik cari solusi yang bisa dilakukan daripada saling menyalahkan.",
+    "Kalau ada kritik, akan lebih kuat kalau disertai usulan yang realistis.",
+    "Yang penting informasinya dicek dulu supaya tidak salah paham.",
+    "Semoga hasil akhirnya membawa manfaat."
+  ];
 
-KELUARAN:
-HANYA tulis JSON valid persis seperti ini (tanpa teks lain):
-{"drafts":["...","...","..."]}
-`.trim();
+  const open = pickFrom(persona.openings, seed);
+  const emo = pickFrom(persona.emojis, seed + 7);
+  const v = autoVariation ? variationSet(seed) : ["A", "B", "C"];
 
-  let r;
-  try {
-    r = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        input: prompt,
-      }),
-    });
-  } catch (e) {
-    throw new Error("Upstream fetch failed: " + String(e));
+  const d1 = formatDraft(v[0], open, contextHint, pickFrom(basePoints, seed + 1), emo);
+  const d2 = formatDraft(v[1], open, contextHint, pickFrom(basePoints, seed + 2), emo);
+  const d3 = formatDraft(v[2], open, contextHint, pickFrom(basePoints, seed + 3), emo);
+
+  return [d1, d2, d3].map(s => s.trim());
+}
+
+function formatDraft(kind, opening, contextHint, point, emoji) {
+  const ctx = contextHint ? ` ${contextHint}` : "";
+  switch (kind) {
+    case "Q":
+      return `${opening}${ctx} Menurut kalian, yang paling penting sekarang apa? ${point} ${emoji}`.replace(/\s+/g, " ");
+    case "H":
+      return `${opening}${ctx} Semoga semuanya berjalan baik. ${point} ${emoji}`.replace(/\s+/g, " ");
+    case "L":
+      return `${opening}${ctx} Intinya: ${point} ${emoji}`.replace(/\s+/g, " ");
+    default:
+      return `${opening}${ctx} ${point} ${emoji}`.replace(/\s+/g, " ");
   }
-
-  const raw = await r.text();
-  if (!r.ok) throw new Error(raw);
-
-  let outText = "";
-  try {
-    const data = JSON.parse(raw);
-    outText =
-      data?.output?.flatMap(o => o.content || [])
-        ?.filter(c => c.type === "output_text")
-        ?.map(c => c.text)
-        ?.join("\n") || "";
-  } catch {
-    outText = raw;
-  }
-
-  const candidate = extractJson(outText || raw);
-  const parsed = JSON.parse(candidate);
-
-  if (!Array.isArray(parsed.drafts) || parsed.drafts.length !== 3) {
-    throw new Error("Bad format from OpenAI");
-  }
-
-  return parsed.drafts.map(s => String(s).trim());
 }
 
 // ===== Helpers =====
@@ -127,25 +144,40 @@ function extractUrls(text) {
   const re = /https?:\/\/[^\s)]+/g;
   return (text.match(re) || []).map(u => u.replace(/[),.]+$/g, ""));
 }
-
-function uniq(arr) {
-  return [...new Set(arr)];
+function uniq(arr) { return [...new Set(arr)]; }
+function pickPersona(personas, i) {
+  if (!personas || personas.length === 0) return "netral";
+  return personas[i % personas.length];
 }
-
+function pickFrom(arr, seed) {
+  if (!arr || arr.length === 0) return "";
+  const idx = Math.abs(seed) % arr.length;
+  return arr[idx];
+}
+function variationSet(seed) {
+  const sets = [
+    ["A", "H", "L"],
+    ["L", "A", "Q"],
+    ["H", "Q", "A"],
+    ["Q", "L", "H"],
+  ];
+  return sets[Math.abs(seed) % sets.length];
+}
 function deriveContextHint(taskText) {
   const lines = taskText.split("\n").map(s => s.trim()).filter(Boolean);
-  const first = lines.find(l => !l.includes("http"));
+  const first = lines.find(l => !l.includes("http://") && !l.includes("https://"));
   if (!first) return "";
-  return first.length > 80 ? first.slice(0, 80) + "…" : first;
+  const short = first.length > 80 ? first.slice(0, 80).trim() + "…" : first;
+  return `(${short})`;
 }
-
-function extractJson(s) {
-  const a = s.indexOf("{");
-  const b = s.lastIndexOf("}");
-  if (a === -1 || b === -1 || b <= a) return "{}";
-  return s.slice(a, b + 1);
+function hash(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h | 0;
 }
-
 function json(obj, status = 200, cors = {}) {
   return new Response(JSON.stringify(obj), {
     status,
