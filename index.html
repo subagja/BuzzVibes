@@ -4,38 +4,41 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Generator Komentar</title>
-  <link rel="stylesheet" href="style.css" />
   <style>
-    /* Minimal style tambahan biar enak (kalau kamu sudah punya style.css, boleh hapus ini) */
-    .wrap{max-width:900px;margin:0 auto;padding:18px;font-family:system-ui,Arial}
-    .sub{color:#666;font-size:13px;margin:6px 0 16px}
-    label{display:block;font-weight:700;font-size:13px;margin:14px 0 6px}
-    input, textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:12px;font-size:14px}
-    textarea{min-height:180px;resize:vertical}
-    .row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
-    button{padding:12px 14px;border-radius:14px;border:1px solid #111;background:#111;color:#fff;font-weight:800;cursor:pointer}
-    button.secondary{background:#fff;color:#111}
-    button:disabled{opacity:.5;cursor:not-allowed}
-    .status{margin-top:10px;color:#444;font-size:13px}
-    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .chip{border:1px solid #ddd;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer;background:#fff}
-    .chip.selected{border-color:#111}
-    .chip.small{font-size:12px;padding:5px 9px}
+    :root { --border:#e6e6e6; --text:#111; --muted:#6b6b6b; }
+    body { margin:0; background:#fff; color:var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    .wrap{max-width:960px;margin:0 auto;padding:22px}
+    h1{margin:0 0 8px;font-size:44px;letter-spacing:-.5px}
+    .sub{color:var(--muted);margin:0 0 22px;line-height:1.4}
+    label{display:block;margin:16px 0 8px;font-weight:800}
+    input, textarea{width:100%; box-sizing:border-box; padding:12px 14px; border:1px solid var(--border); border-radius:16px; font-size:16px; outline:none}
+    textarea{min-height:220px; resize:vertical; line-height:1.4}
+    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:14px}
+    button{padding:12px 16px;border-radius:16px;border:1px solid #111;background:#111;color:#fff;font-weight:900;cursor:pointer}
+    button.secondary{background:#fff;color:#111;border:1px solid var(--border)}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .status{margin-top:10px;color:#333}
+    .muted{color:var(--muted);font-size:13px;font-weight:600}
     .autocomplete{position:relative}
-    .suggest{position:absolute;top:44px;left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:14px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.06);z-index:10}
-    .suggest button{width:100%;text-align:left;border:0;border-bottom:1px solid #eee;background:#fff;color:#111;border-radius:0;padding:10px 12px;font-weight:700}
+    .suggest{position:absolute; left:0; right:0; top:52px; background:#fff; border:1px solid var(--border); border-radius:16px;
+      overflow:hidden; box-shadow:0 10px 28px rgba(0,0,0,.08); z-index:30}
+    .suggest button{width:100%; text-align:left; border:0; border-bottom:1px solid #f0f0f0; background:#fff; color:#111; padding:12px 14px; border-radius:0; font-weight:900}
     .suggest button:last-child{border-bottom:0}
-    .muted{color:#777;font-weight:600;font-size:12px}
-    .card{border:1px solid #e5e5e5;border-radius:16px;padding:14px;margin-top:14px}
-    .card h3{margin:0 0 10px;font-size:14px}
-    .card .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-    .pill{border:1px solid #eee;border-radius:999px;padding:4px 10px;font-size:12px;color:#333;background:#fafafa}
-    .draft{border:1px solid #eee;border-radius:14px;padding:10px;margin-top:10px}
+    .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+    .chip{border:1px solid var(--border); background:#fff; border-radius:999px; padding:8px 12px; font-size:13px; font-weight:800; cursor:pointer}
+    .chip.selected{border-color:#111}
+    .toggle{display:flex; gap:10px; align-items:center; margin-top:12px}
+    .toggle input{width:auto}
+    .cards{margin-top:18px}
+    .card{border:1px solid var(--border); border-radius:18px; padding:14px; margin-top:14px}
+    .meta{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:10px}
+    .metaLeft{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .pill{border:1px solid #f0f0f0;background:#fafafa;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}
+    .draft{border:1px solid #f0f0f0;border-radius:16px;padding:12px;margin-top:10px}
     .draft p{margin:0 0 10px;white-space:pre-wrap}
-    .draft .actions{display:flex;gap:10px}
-    .split{display:flex;gap:10px;flex-wrap:wrap}
-    .split > *{flex:1;min-width:220px}
-    .toggle{display:flex;gap:10px;align-items:center}
+    .draft .actions{display:flex; gap:10px; flex-wrap:wrap}
+    .smallBtn{padding:10px 12px;border-radius:14px}
+    .url{margin-top:10px; word-break:break-all}
   </style>
 </head>
 <body>
@@ -43,30 +46,29 @@
     <h1>Generator Komentar</h1>
     <p class="sub">Tempel teks tugas (boleh panjang) → sistem ambil semua link → buat 3 komentar per link. Posting tetap manual.</p>
 
-    <label>Persona (autocomplete) <span class="muted">— pilih 1–2 gaya agar variasi</span></label>
+    <label>Persona (autocomplete) <span class="muted">— pilih 1–2 gaya agar variasi. Bisa tambah manual (Enter).</span></label>
     <div class="autocomplete">
-      <input id="personaInput" placeholder="Ketik: humanis, rasional, santai, historis..." autocomplete="off" />
+      <input id="personaInput" placeholder="Ketik: humanis, rasional, santai… atau tulis manual lalu Enter" autocomplete="off" />
       <div id="suggestBox" class="suggest" style="display:none;"></div>
     </div>
     <div id="personaChips" class="chips"></div>
 
-    <div class="row toggle">
+    <div class="toggle">
       <input id="varToggle" type="checkbox" checked />
-      <label for="varToggle" style="margin:0;font-weight:700;">Variasi otomatis (ON)</label>
+      <label for="varToggle" style="margin:0;font-weight:900;">Variasi otomatis (ON)</label>
       <span class="muted">— mengurangi pengulangan antar draft</span>
     </div>
 
     <label>Paste Tugas (teks + link campur)</label>
-    <textarea id="taskText" placeholder="Paste teks tugas di sini..."></textarea>
+    <textarea id="taskText" placeholder="Paste teks tugas di sini (boleh campur banyak link)…"></textarea>
 
     <div class="row">
       <button id="btnGenerate">Generate untuk semua link</button>
       <button id="btnClear" class="secondary">Clear</button>
     </div>
 
-    <div id="status" class="status"></div>
-
-    <section id="results"></section>
+    <div id="status" class="status muted"></div>
+    <section id="results" class="cards"></section>
   </main>
 
   <script src="app.js"></script>
