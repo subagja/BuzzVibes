@@ -1,32 +1,48 @@
 // ====== CONFIG ======
 const WORKER_URL = "https://buzzvibes.adisubagja300.workers.dev"; // GANTI
 
-// ====== Persona presets (autocomplete) ======
+// Persona presets (autocomplete)
 const PERSONA_PRESETS = [
-  { key: "santai_bangga",  label: "Netizen santai & bangga", desc: "Hangat, santai, singkat, vibe positif." },
+  { key: "santai_bangga", label: "Netizen santai & bangga", desc: "Hangat, santai, singkat, vibe positif." },
   { key: "nasionalis_tenang", label: "Nasionalis tenang", desc: "Kalem, persatuan, tidak emosional." },
-  { key: "rasional", desc: "Fokus logika umum, tidak hiperbola." , label: "Rasional"},
-  { key: "pro_logika", desc: "Lebih argumentatif, sebab-akibat, tetap singkat.", label: "Pro-logika" },
-  { key: "historis_reflektif", desc: "Nada bijak, pelajaran masa lalu secara umum.", label: "Historis & reflektif" },
-  { key: "humanis", desc: "Empatik, menenangkan, fokus warga/manusia.", label: "Humanis" },
+  { key: "rasional", label: "Rasional", desc: "Fokus logika umum, hindari hiperbola." },
+  { key: "pro_logika", label: "Pro-logika", desc: "Lebih runtut sebab–akibat, tetap singkat." },
+  { key: "historis_reflektif", label: "Historis & reflektif", desc: "Nada bijak, pelajaran umum, tidak menggurui." },
+  { key: "humanis", label: "Humanis", desc: "Empatik, menenangkan, fokus warga/manusia." },
 ];
 
-// ====== DOM ======
+// ================= DOM =================
 const $ = (id) => document.getElementById(id);
+
 const personaInput = $("personaInput");
 const suggestBox = $("suggestBox");
 const personaChips = $("personaChips");
+
 const varToggle = $("varToggle");
 const taskText = $("taskText");
+
 const btnGenerate = $("btnGenerate");
 const btnClear = $("btnClear");
+
 const statusEl = $("status");
 const resultsEl = $("results");
 
-let selectedPersonas = []; // array of keys
+let selectedPersonas = []; // bisa preset key atau teks custom
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function getPersonaLabel(keyOrText) {
+  const p = PERSONA_PRESETS.find(x => x.key === keyOrText);
+  return p ? p.label : keyOrText; // custom persona tampil apa adanya
+}
 
 function renderSelectedChips() {
   personaChips.innerHTML = "";
+
   if (selectedPersonas.length === 0) {
     const tip = document.createElement("div");
     tip.className = "muted";
@@ -35,51 +51,84 @@ function renderSelectedChips() {
     return;
   }
 
-  selectedPersonas.forEach((key) => {
-    const p = PERSONA_PRESETS.find(x => x.key === key);
+  selectedPersonas.forEach((val) => {
     const chip = document.createElement("button");
     chip.type = "button";
-    chip.className = "chip selected small";
-    chip.textContent = `${p?.label || key} ×`;
+    chip.className = "chip selected";
+    chip.textContent = `${getPersonaLabel(val)} ×`;
     chip.onclick = () => {
-      selectedPersonas = selectedPersonas.filter(k => k !== key);
+      selectedPersonas = selectedPersonas.filter(x => x !== val);
       renderSelectedChips();
     };
     personaChips.appendChild(chip);
   });
 }
 
+function addPersona(val) {
+  const v = String(val || "").trim();
+  if (!v) return;
+
+  // Kalau user ngetik persis label preset, simpan key preset (biar konsisten)
+  const presetByLabel = PERSONA_PRESETS.find(p => p.label.toLowerCase() === v.toLowerCase());
+  const storeVal = presetByLabel ? presetByLabel.key : v;
+
+  if (!selectedPersonas.includes(storeVal)) selectedPersonas.push(storeVal);
+
+  personaInput.value = "";
+  suggestBox.style.display = "none";
+  renderSelectedChips();
+}
+
 function showSuggestions(query) {
-  const q = query.trim().toLowerCase();
+  const q = String(query || "").trim();
+  const qLower = q.toLowerCase();
+
   if (!q) { suggestBox.style.display = "none"; return; }
 
   const matches = PERSONA_PRESETS.filter(p =>
-    p.key.includes(q) || (p.label || "").toLowerCase().includes(q) || (p.desc || "").toLowerCase().includes(q)
+    p.key.includes(qLower) ||
+    (p.label || "").toLowerCase().includes(qLower) ||
+    (p.desc || "").toLowerCase().includes(qLower)
   ).slice(0, 6);
 
-  if (matches.length === 0) { suggestBox.style.display = "none"; return; }
-
   suggestBox.innerHTML = "";
+
+  // Opsi tambah custom persona
+  const addBtn = document.createElement("button");
+  addBtn.type = "button";
+  addBtn.innerHTML = `Tambah persona: <b>${escapeHtml(q)}</b> <div class="muted">Tekan Enter juga bisa</div>`;
+  addBtn.onclick = () => addPersona(q);
+  suggestBox.appendChild(addBtn);
+
+  // Hasil preset
   matches.forEach(p => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.innerHTML = `${p.label} <div class="muted">${p.desc}</div>`;
-    btn.onclick = () => {
-      if (!selectedPersonas.includes(p.key)) selectedPersonas.push(p.key);
-      personaInput.value = "";
-      suggestBox.style.display = "none";
-      renderSelectedChips();
-    };
+    btn.innerHTML = `${escapeHtml(p.label)} <div class="muted">${escapeHtml(p.desc)}</div>`;
+    btn.onclick = () => addPersona(p.key);
     suggestBox.appendChild(btn);
   });
 
   suggestBox.style.display = "block";
 }
 
+// events
 personaInput.addEventListener("input", (e) => showSuggestions(e.target.value));
 personaInput.addEventListener("focus", (e) => showSuggestions(e.target.value));
+
+personaInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    addPersona(personaInput.value);
+  } else if (e.key === "Escape") {
+    suggestBox.style.display = "none";
+  }
+});
+
 document.addEventListener("click", (e) => {
-  if (!suggestBox.contains(e.target) && e.target !== personaInput) suggestBox.style.display = "none";
+  if (!suggestBox.contains(e.target) && e.target !== personaInput) {
+    suggestBox.style.display = "none";
+  }
 });
 
 btnClear.onclick = () => {
@@ -88,7 +137,7 @@ btnClear.onclick = () => {
   resultsEl.innerHTML = "";
 };
 
-// ====== Main Generate ======
+// ================= Generate =================
 btnGenerate.onclick = async () => {
   const text = taskText.value.trim();
   if (!text) return alert("Paste tugas dulu.");
@@ -98,8 +147,8 @@ btnGenerate.onclick = async () => {
 
   const payload = {
     taskText: text,
-    personas: selectedPersonas,         // array keys
-    autoVariation: !!varToggle.checked, // boolean
+    personas: selectedPersonas,          // preset key atau custom text
+    autoVariation: !!varToggle.checked,  // boolean
   };
 
   try {
@@ -121,7 +170,7 @@ btnGenerate.onclick = async () => {
     }
 
     if (!Array.isArray(data.items)) {
-      console.error("Unexpected:", data);
+      console.error("Unexpected response:", data);
       statusEl.textContent = "Respon server tidak sesuai.";
       alert("Worker tidak mengembalikan items.");
       return;
@@ -144,29 +193,32 @@ function renderResults(items) {
     const card = document.createElement("div");
     card.className = "card";
 
-    const header = document.createElement("div");
-    header.className = "meta";
+    const meta = document.createElement("div");
+    meta.className = "meta";
 
-    const title = document.createElement("h3");
-    title.innerHTML = `Link #${idx + 1}`;
-    title.style.flex = "1";
-    title.style.margin = "0";
+    const left = document.createElement("div");
+    left.className = "metaLeft";
 
-    const openBtn = document.createElement("button");
-    openBtn.type = "button";
-    openBtn.className = "secondary";
-    openBtn.textContent = "Open Link";
-    openBtn.onclick = () => window.open(item.url, "_blank", "noopener,noreferrer");
+    const title = document.createElement("div");
+    title.style.fontWeight = "900";
+    title.textContent = `Link #${idx + 1}`;
 
     const pill = document.createElement("span");
     pill.className = "pill";
     pill.textContent = item.personaLabel ? `Persona: ${item.personaLabel}` : "Persona: Netral";
 
-    header.appendChild(title);
-    header.appendChild(pill);
-    header.appendChild(openBtn);
+    left.appendChild(title);
+    left.appendChild(pill);
 
-    card.appendChild(header);
+    const openBtn = document.createElement("button");
+    openBtn.type = "button";
+    openBtn.className = "secondary smallBtn";
+    openBtn.textContent = "Open Link";
+    openBtn.onclick = () => window.open(item.url, "_blank", "noopener,noreferrer");
+
+    meta.appendChild(left);
+    meta.appendChild(openBtn);
+    card.appendChild(meta);
 
     (item.drafts || []).forEach((t) => {
       const d = document.createElement("div");
@@ -174,7 +226,7 @@ function renderResults(items) {
       d.innerHTML = `
         <p>${escapeHtml(t)}</p>
         <div class="actions">
-          <button type="button" class="secondary">Copy</button>
+          <button type="button" class="secondary smallBtn">Copy</button>
         </div>
       `;
       d.querySelector("button").onclick = async () => {
@@ -185,17 +237,13 @@ function renderResults(items) {
     });
 
     const urlLine = document.createElement("div");
-    urlLine.className = "muted";
-    urlLine.style.marginTop = "10px";
+    urlLine.className = "muted url";
     urlLine.textContent = item.url;
-
     card.appendChild(urlLine);
+
     resultsEl.appendChild(card);
   });
 }
 
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-  }[c]));
-}
+// init
+renderSelectedChips();
