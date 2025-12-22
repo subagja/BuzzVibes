@@ -55,7 +55,27 @@ function renderSelectedChips() {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.className = "chip selected";
-    chip.textContent = `${getPersonaLabel(val)} ×`;
+    // chip.textContent = `${getPersonaLabel(val)} ×`;
+    const preset = PERSONA_PRESETS.find(p => p.key === val);
+    if (preset) {
+      chip.innerHTML = `
+        <span class="chipDetail">
+          <span class="chipTitle">${escapeHtml(preset.label)}</span>
+          <span class="chipDesc">${escapeHtml(preset.desc)}</span>
+        </span>
+        <span style="margin-left:10px;font-weight:900;">×</span>
+      `;
+    } else {
+      // custom persona
+      chip.innerHTML = `
+        <span class="chipDetail">
+          <span class="chipTitle">${escapeHtml(val)}</span>
+          <span class="chipDesc">Custom persona</span>
+        </span>
+        <span style="margin-left:10px;font-weight:900;">×</span>
+      `;
+    }
+
     chip.onclick = () => {
       selectedPersonas = selectedPersonas.filter(x => x !== val);
       renderSelectedChips();
