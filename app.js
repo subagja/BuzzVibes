@@ -27,6 +27,7 @@ const btnClear = $("btnClear");
 const statusEl = $("status");
 const resultsEl = $("results");
 
+// Progress UI (pastikan ada di index.html)
 const progressWrap = $("progressWrap");
 const progressFill = $("progressFill");
 const progressLabel = $("progressLabel");
@@ -34,12 +35,79 @@ const progressMeta = $("progressMeta");
 
 let selectedPersonas = []; // bisa preset key atau teks custom
 
+// ================= Utils =================
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[c]));
 }
 
+// ================= Progress (estimasi) =================
+let progressTimer = null;
+let progressTick = null;
+let progressStartAt = 0;
+
+function startProgress(labelText = "Memproses…") {
+  // kalau elemen progress belum ada, skip
+  if (!progressWrap || !progressFill || !progressLabel || !progressMeta) return;
+
+  stopProgress(false); // reset tanpa animasi sukses/gagal
+
+  progressStartAt = Date.now();
+  progressWrap.style.display = "block";
+  progressLabel.textContent = labelText;
+
+  let p = 2;
+  progressFill.style.width = `${p}%`;
+  progressMeta.textContent = `${Math.floor(p)}% • 0s`;
+
+  // update timer
+  progressTimer = setInterval(() => {
+    const secs = Math.floor((Date.now() - progressStartAt) / 1000);
+    progressMeta.textContent = `${Math.floor(p)}% • ${secs}s`;
+  }, 250);
+
+  // naik pelan sampai 90%
+  progressTick = setInterval(() => {
+    const remaining = 90 - p;
+    if (remaining <= 0) return;
+    p += Math.max(0.2, remaining * 0.03); // makin lambat mendekati 90
+    if (p > 90) p = 90;
+    progressFill.style.width = `${p}%`;
+  }, 300);
+}
+
+function stopProgress(success = true, finalLabel = "") {
+  if (progressTimer) clearInterval(progressTimer);
+  if (progressTick) clearInterval(progressTick);
+  progressTimer = null;
+  progressTick = null;
+
+  if (!progressWrap || !progressFill || !progressLabel || !progressMeta) return;
+
+  if (!success) {
+    // reset / gagal: hilang setelah sebentar
+    if (finalLabel) progressLabel.textContent = finalLabel;
+    setTimeout(() => {
+      progressWrap.style.display = "none";
+      progressFill.style.width = "0%";
+      progressMeta.textContent = "";
+    }, finalLabel ? 1500 : 0);
+    return;
+  }
+
+  // sukses: ke 100% lalu hilang
+  progressFill.style.width = "100%";
+  if (finalLabel) progressLabel.textContent = finalLabel;
+
+  setTimeout(() => {
+    progressWrap.style.display = "none";
+    progressFill.style.width = "0%";
+    progressMeta.textContent = "";
+  }, 700);
+}
+
+// ================= Persona UI =================
 function renderSelectedChips() {
   personaChips.innerHTML = "";
 
@@ -154,13 +222,14 @@ btnClear.onclick = () => {
   taskText.value = "";
   statusEl.textContent = "";
   resultsEl.innerHTML = "";
+  stopProgress(false); // reset
 };
 
 // ================= Worker Call (Debuggable) =================
 async function callWorker(payload) {
   // timeout biar tidak "menggantung"
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 20000);
+  const t = setTimeout(() => ctrl.abort(), 60000); // ✅ 60 detik
 
   let res;
   let raw = "";
@@ -175,13 +244,25 @@ async function callWorker(payload) {
   } catch (err) {
     clearTimeout(t);
 
-    // Banyak kasus: CORS/mixed content -> "TypeError: Failed to fetch"
+    const name = String(err?.name || "");
     const msg = String(err?.message || err);
-    throw new Error(
-      msg.includes("Failed to fetch")
-        ? "FAILED_TO_FETCH (CORS/URL/Network). Cek WORKER_URL, CORS header Worker, dan koneksi."
-        : msg
-    );
+    const m = msg.toLowerCase();
+
+    if (
+      name === "AbortError" ||
+      m.includes("aborted") ||
+      m.includes("signal is aborted") ||
+      m.includes("the user aborted") ||
+      m.includes("request aborted")
+    ) {
+      throw new Error("REQUEST_TIMEOUT: Proses terlalu lama / dibatalkan browser. Coba ulang atau kurangi jumlah link.");
+    }
+
+    if (msg.includes("Failed to fetch")) {
+      throw new Error("FAILED_TO_FETCH (CORS/URL/Network). Cek WORKER_URL, CORS header Worker, dan koneksi.");
+    }
+
+    throw new Error(msg);
   } finally {
     clearTimeout(t);
   }
@@ -207,8 +288,14 @@ btnGenerate.onclick = async () => {
   const text = taskText.value.trim();
   if (!text) return alert("Paste tugas dulu.");
 
+  // lock UI biar tidak double submit
+  btnGenerate.disabled = true;
+  btnClear.disabled = true;
+
   statusEl.textContent = "Mengirim ke Worker…";
   resultsEl.innerHTML = "";
+
+  startProgress("Mengirim & memproses di Worker…");
 
   const payload = {
     taskText: text,
@@ -220,19 +307,25 @@ btnGenerate.onclick = async () => {
     const data = await callWorker(payload);
 
     if (!Array.isArray(data.items)) {
+      console.error("Unexpected response:", data);
+      stopProgress(false, "Gagal ❌");
       statusEl.textContent = "Respon server tidak sesuai.";
       alert("Worker tidak mengembalikan items.");
-      console.error("Unexpected response:", data);
       return;
     }
 
+    stopProgress(true, "Selesai ✅");
     statusEl.textContent = `Selesai. ${data.items.length} link diproses.`;
     renderResults(data.items);
 
   } catch (err) {
     console.error("Worker call failed:", err);
+    stopProgress(false, "Gagal ❌");
     statusEl.textContent = "Gagal.";
     alert(String(err.message || err));
+  } finally {
+    btnGenerate.disabled = false;
+    btnClear.disabled = false;
   }
 };
 
