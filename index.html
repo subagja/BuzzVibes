@@ -5,14 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Generator Komentar</title>
 
-  <!-- ✅ CSS eksternal + cache bust -->
-  <link rel="stylesheet" href="./style.css?v=20251223" />
+  <link rel="stylesheet" href="./style.css?v=20251223b" />
 </head>
 
 <body>
   <main class="wrap">
     <h1>Generator Komentar</h1>
-    <p class="sub">Tempel teks tugas (boleh panjang) → sistem ambil semua link → buat 3 komentar per link. Posting tetap manual.</p>
+    <p class="sub">Tempel teks tugas → sistem ambil semua link → buat 3 komentar per link. Klik <b>Approve</b> untuk copy komentar & langsung buka link (posting tetap manual).</p>
 
     <label>
       Persona (autocomplete)
@@ -40,7 +39,6 @@
       <button id="btnClear" class="secondary">Clear</button>
     </div>
 
-    <!-- ✅ Progress bar -->
     <div id="progressWrap" class="progressWrap" style="display:none;">
       <div class="progressTop">
         <div id="progressLabel" class="progressLabel">Memproses…</div>
@@ -55,7 +53,6 @@
     <section id="results" class="cards"></section>
   </main>
 
-  <!-- ✅ JS + cache bust -->
-  <script src="./app.js?v=20251223"></script>
+  <script src="./app.js?v=20251223b"></script>
 </body>
 </html>
