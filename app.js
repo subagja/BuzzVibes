@@ -1,5 +1,5 @@
 // ====== CONFIG ======
-const WORKER_URL = "https://buzzvibes.adisubagja300.workers.dev"; // GANTI
+const WORKER_URL = "https://buzzvibes.adisubagja300.workers.dev"; // GANTI jika beda
 
 // Persona presets (autocomplete)
 const PERSONA_PRESETS = [
@@ -35,11 +35,6 @@ function escapeHtml(str) {
   }[c]));
 }
 
-function getPersonaLabel(keyOrText) {
-  const p = PERSONA_PRESETS.find(x => x.key === keyOrText);
-  return p ? p.label : keyOrText; // custom persona tampil apa adanya
-}
-
 function renderSelectedChips() {
   personaChips.innerHTML = "";
 
@@ -55,7 +50,7 @@ function renderSelectedChips() {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.className = "chip selected";
-    // chip.textContent = `${getPersonaLabel(val)} ×`;
+
     const preset = PERSONA_PRESETS.find(p => p.key === val);
     if (preset) {
       chip.innerHTML = `
@@ -66,7 +61,6 @@ function renderSelectedChips() {
         <span style="margin-left:10px;font-weight:900;">×</span>
       `;
     } else {
-      // custom persona
       chip.innerHTML = `
         <span class="chipDetail">
           <span class="chipTitle">${escapeHtml(val)}</span>
@@ -88,7 +82,7 @@ function addPersona(val) {
   const v = String(val || "").trim();
   if (!v) return;
 
-  // Kalau user ngetik persis label preset, simpan key preset (biar konsisten)
+  // Jika user ngetik label preset persis, simpan key-nya
   const presetByLabel = PERSONA_PRESETS.find(p => p.label.toLowerCase() === v.toLowerCase());
   const storeVal = presetByLabel ? presetByLabel.key : v;
 
@@ -113,14 +107,14 @@ function showSuggestions(query) {
 
   suggestBox.innerHTML = "";
 
-  // Opsi tambah custom persona
+  // opsi tambah custom
   const addBtn = document.createElement("button");
   addBtn.type = "button";
   addBtn.innerHTML = `Tambah persona: <b>${escapeHtml(q)}</b> <div class="muted">Tekan Enter juga bisa</div>`;
   addBtn.onclick = () => addPersona(q);
   suggestBox.appendChild(addBtn);
 
-  // Hasil preset
+  // preset matches
   matches.forEach(p => {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -157,6 +151,52 @@ btnClear.onclick = () => {
   resultsEl.innerHTML = "";
 };
 
+// ================= Worker Call (Debuggable) =================
+async function callWorker(payload) {
+  // timeout biar tidak "menggantung"
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 20000);
+
+  let res;
+  let raw = "";
+  try {
+    res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: ctrl.signal,
+    });
+    raw = await res.text();
+  } catch (err) {
+    clearTimeout(t);
+
+    // Banyak kasus: CORS/mixed content -> "TypeError: Failed to fetch"
+    const msg = String(err?.message || err);
+    throw new Error(
+      msg.includes("Failed to fetch")
+        ? "FAILED_TO_FETCH (CORS/URL/Network). Cek WORKER_URL, CORS header Worker, dan koneksi."
+        : msg
+    );
+  } finally {
+    clearTimeout(t);
+  }
+
+  // Debug log (penting!)
+  console.log("Worker status:", res.status);
+  console.log("Worker raw:", raw);
+
+  let data = {};
+  try { data = JSON.parse(raw); } catch { data = { raw }; }
+
+  if (!res.ok) {
+    const errMsg = data?.error ? `${data.error}` : `HTTP ${res.status}`;
+    const details = data?.details ? `\n\nDetails:\n${data.details}` : (data?.raw ? `\n\nRaw:\n${data.raw}` : "");
+    throw new Error(`${errMsg}${details}`.trim());
+  }
+
+  return data;
+}
+
 // ================= Generate =================
 btnGenerate.onclick = async () => {
   const text = taskText.value.trim();
@@ -172,27 +212,12 @@ btnGenerate.onclick = async () => {
   };
 
   try {
-    const res = await fetch(WORKER_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    const raw = await res.text();
-    let data = {};
-    try { data = JSON.parse(raw); } catch { data = { raw }; }
-
-    if (!res.ok) {
-      console.error("Worker error:", data);
-      statusEl.textContent = "Gagal.";
-      alert(data?.error || `HTTP ${res.status}`);
-      return;
-    }
+    const data = await callWorker(payload);
 
     if (!Array.isArray(data.items)) {
-      console.error("Unexpected response:", data);
       statusEl.textContent = "Respon server tidak sesuai.";
       alert("Worker tidak mengembalikan items.");
+      console.error("Unexpected response:", data);
       return;
     }
 
@@ -200,9 +225,9 @@ btnGenerate.onclick = async () => {
     renderResults(data.items);
 
   } catch (err) {
-    console.error("FETCH FAILED:", err);
-    statusEl.textContent = "Koneksi gagal.";
-    alert("Tidak bisa terhubung ke Worker. Cek URL Worker & koneksi.");
+    console.error("Worker call failed:", err);
+    statusEl.textContent = "Gagal.";
+    alert(String(err.message || err));
   }
 };
 
