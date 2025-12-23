@@ -5,28 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Generator Komentar</title>
 
-  <!-- ✅ Panggil CSS eksternal -->
-  <link rel="stylesheet" href="./style.css" />
-
-  <!-- ✅ CSS kecil khusus chip detail (boleh dipindah ke style.css kalau mau) -->
-  <style>
-    /* Pastikan chip tidak ikut warna putih dari button global */
-    .chip { color: #111; }
-
-    /* Chip detail: 2 baris */
-    .chipDetail {
-      display: inline-flex;
-      flex-direction: column;
-      gap: 2px;
-      text-align: left;
-      line-height: 1.2;
-    }
-    .chipTitle { font-weight: 900; font-size: 13px; }
-    .chipDesc { font-size: 11px; color: #666; font-weight: 700; }
-
-    /* supaya tombol chip tetap rapi */
-    .chip.selected { border-color: #111; }
-  </style>
+  <!-- ✅ CSS eksternal + cache bust -->
+  <link rel="stylesheet" href="./style.css?v=20251223" />
 </head>
 
 <body>
@@ -34,7 +14,11 @@
     <h1>Generator Komentar</h1>
     <p class="sub">Tempel teks tugas (boleh panjang) → sistem ambil semua link → buat 3 komentar per link. Posting tetap manual.</p>
 
-    <label>Persona (autocomplete) <span class="muted">— pilih 1–2 gaya agar variasi. Bisa tambah manual (Enter).</span></label>
+    <label>
+      Persona (autocomplete)
+      <span class="muted">— pilih 1–2 gaya agar variasi. Bisa tambah manual (Enter).</span>
+    </label>
+
     <div class="autocomplete">
       <input id="personaInput" placeholder="Ketik: humanis, rasional, santai… atau tulis manual lalu Enter" autocomplete="off" />
       <div id="suggestBox" class="suggest" style="display:none;"></div>
@@ -56,6 +40,7 @@
       <button id="btnClear" class="secondary">Clear</button>
     </div>
 
+    <!-- ✅ Progress bar -->
     <div id="progressWrap" class="progressWrap" style="display:none;">
       <div class="progressTop">
         <div id="progressLabel" class="progressLabel">Memproses…</div>
@@ -65,11 +50,12 @@
         <div id="progressFill" class="progressFill"></div>
       </div>
     </div>
-    
+
     <div id="status" class="status muted"></div>
     <section id="results" class="cards"></section>
   </main>
 
-  <script src="./app.js"></script>
+  <!-- ✅ JS + cache bust -->
+  <script src="./app.js?v=20251223"></script>
 </body>
 </html>
