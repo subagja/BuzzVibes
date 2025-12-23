@@ -48,10 +48,9 @@ let progressTick = null;
 let progressStartAt = 0;
 
 function startProgress(labelText = "Memproses…") {
-  // kalau elemen progress belum ada, skip
   if (!progressWrap || !progressFill || !progressLabel || !progressMeta) return;
 
-  stopProgress(false); // reset tanpa animasi sukses/gagal
+  stopProgress(false);
 
   progressStartAt = Date.now();
   progressWrap.style.display = "block";
@@ -61,17 +60,15 @@ function startProgress(labelText = "Memproses…") {
   progressFill.style.width = `${p}%`;
   progressMeta.textContent = `${Math.floor(p)}% • 0s`;
 
-  // update timer
   progressTimer = setInterval(() => {
     const secs = Math.floor((Date.now() - progressStartAt) / 1000);
     progressMeta.textContent = `${Math.floor(p)}% • ${secs}s`;
   }, 250);
 
-  // naik pelan sampai 90%
   progressTick = setInterval(() => {
     const remaining = 90 - p;
     if (remaining <= 0) return;
-    p += Math.max(0.2, remaining * 0.03); // makin lambat mendekati 90
+    p += Math.max(0.2, remaining * 0.03);
     if (p > 90) p = 90;
     progressFill.style.width = `${p}%`;
   }, 300);
@@ -86,7 +83,6 @@ function stopProgress(success = true, finalLabel = "") {
   if (!progressWrap || !progressFill || !progressLabel || !progressMeta) return;
 
   if (!success) {
-    // reset / gagal: hilang setelah sebentar
     if (finalLabel) progressLabel.textContent = finalLabel;
     setTimeout(() => {
       progressWrap.style.display = "none";
@@ -96,7 +92,6 @@ function stopProgress(success = true, finalLabel = "") {
     return;
   }
 
-  // sukses: ke 100% lalu hilang
   progressFill.style.width = "100%";
   if (finalLabel) progressLabel.textContent = finalLabel;
 
@@ -155,7 +150,6 @@ function addPersona(val) {
   const v = String(val || "").trim();
   if (!v) return;
 
-  // Jika user ngetik label preset persis, simpan key-nya
   const presetByLabel = PERSONA_PRESETS.find(p => p.label.toLowerCase() === v.toLowerCase());
   const storeVal = presetByLabel ? presetByLabel.key : v;
 
@@ -180,14 +174,12 @@ function showSuggestions(query) {
 
   suggestBox.innerHTML = "";
 
-  // opsi tambah custom
   const addBtn = document.createElement("button");
   addBtn.type = "button";
   addBtn.innerHTML = `Tambah persona: <b>${escapeHtml(q)}</b> <div class="muted">Tekan Enter juga bisa</div>`;
   addBtn.onclick = () => addPersona(q);
   suggestBox.appendChild(addBtn);
 
-  // preset matches
   matches.forEach(p => {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -222,14 +214,13 @@ btnClear.onclick = () => {
   taskText.value = "";
   statusEl.textContent = "";
   resultsEl.innerHTML = "";
-  stopProgress(false); // reset
+  stopProgress(false);
 };
 
 // ================= Worker Call (Debuggable) =================
 async function callWorker(payload) {
-  // timeout biar tidak "menggantung"
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 60000); // ✅ 60 detik
+  const t = setTimeout(() => ctrl.abort(), 60000);
 
   let res;
   let raw = "";
@@ -267,7 +258,6 @@ async function callWorker(payload) {
     clearTimeout(t);
   }
 
-  // Debug log (penting!)
   console.log("Worker status:", res.status);
   console.log("Worker raw:", raw);
 
@@ -288,7 +278,6 @@ btnGenerate.onclick = async () => {
   const text = taskText.value.trim();
   if (!text) return alert("Paste tugas dulu.");
 
-  // lock UI biar tidak double submit
   btnGenerate.disabled = true;
   btnClear.disabled = true;
 
@@ -299,8 +288,8 @@ btnGenerate.onclick = async () => {
 
   const payload = {
     taskText: text,
-    personas: selectedPersonas,          // preset key atau custom text
-    autoVariation: !!varToggle.checked,  // boolean
+    personas: selectedPersonas,
+    autoVariation: !!varToggle.checked,
   };
 
   try {
@@ -353,29 +342,39 @@ function renderResults(items) {
     left.appendChild(title);
     left.appendChild(pill);
 
-    const openBtn = document.createElement("button");
-    openBtn.type = "button";
-    openBtn.className = "secondary smallBtn";
-    openBtn.textContent = "Open Link";
-    openBtn.onclick = () => window.open(item.url, "_blank", "noopener,noreferrer");
-
+    // ✅ Hapus tombol Open Link di header (karena approve akan buka link)
     meta.appendChild(left);
-    meta.appendChild(openBtn);
     card.appendChild(meta);
 
-    (item.drafts || []).forEach((t) => {
+    (item.drafts || []).forEach((t, didx) => {
       const d = document.createElement("div");
       d.className = "draft";
       d.innerHTML = `
         <p>${escapeHtml(t)}</p>
         <div class="actions">
-          <button type="button" class="secondary smallBtn">Copy</button>
+          <button type="button" class="primary smallBtn">Approve</button>
         </div>
       `;
+
       d.querySelector("button").onclick = async () => {
-        await navigator.clipboard.writeText(t);
-        statusEl.textContent = "Tersalin ke clipboard.";
+        // ✅ Panggil window.open dulu (anti popup-block), lalu copy
+        const w = window.open(item.url, "_blank", "noopener,noreferrer");
+
+        try {
+          await navigator.clipboard.writeText(t);
+          statusEl.textContent = "Approved ✓ Komentar disalin & link dibuka.";
+        } catch (e) {
+          console.error(e);
+          statusEl.textContent = "Link dibuka, tapi gagal copy (cek izin clipboard).";
+          alert("Link sudah dibuka, tapi gagal copy. Cek izin clipboard browser.");
+        }
+
+        // Kalau popup diblokir, kasih hint
+        if (!w) {
+          alert("Popup diblokir. Aktifkan popups untuk site ini, lalu coba Approve lagi.");
+        }
       };
+
       card.appendChild(d);
     });
 
