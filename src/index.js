@@ -78,60 +78,57 @@ export default {
 async function generateDraftsAI({ env, link, context, guideline, tone }) {
 
   // 🔒 PROMPT TETAP (tidak diubah strukturnya)
+//   const prompt = `
+// Kamu adalah asisten yang membuat komentar media sosial berbahasa Indonesia.
+
+// TUGAS:
+// Buat 3 draft komentar untuk sebuah postingan.
+
+// ATURAN WAJIB:
+// - Bahasa Indonesia saja.
+// - 1–2 kalimat per draft.
+// - Sopan, tidak provokatif, tidak menambah klaim/fakta baru.
+// - Hindari kata-kata: "Tugas:", "Konteks:", "Output:", "The text...", dan penjelasan meta.
+// - Tone: ${tone}
+// - Ikuti guideline pengguna.
+
+// INPUT:
+// Link (opsional): ${link}
+// Konteks (opsional): ${context}
+// Guideline: ${guideline}
+
+// KELUARAN:
+// HANYA tulis JSON valid persis seperti ini (tanpa teks lain):
+// {"drafts":["...","...","..."]}
+// `.trim();
+
   const prompt = `
-Kamu adalah asisten yang membuat komentar media sosial berbahasa Indonesia.
-
-TUGAS:
-Buat 3 draft komentar untuk sebuah postingan.
-
-ATURAN WAJIB:
-- Bahasa Indonesia saja.
-- 1–2 kalimat per draft.
-- Sopan, tidak provokatif, tidak menambah klaim/fakta baru.
-- Hindari kata-kata: "Tugas:", "Konteks:", "Output:", "The text...", dan penjelasan meta.
-- Tone: ${tone}
-- Ikuti guideline pengguna.
-
-INPUT:
-Link (opsional): ${link}
-Konteks (opsional): ${context}
-Guideline: ${guideline}
-
-KELUARAN:
-HANYA tulis JSON valid persis seperti ini (tanpa teks lain):
-{"drafts":["...","...","..."]}
-`.trim();
-
-  // const prompt = `
-  //   Kamu adalah asisten yang membuat komentar media sosial berbahasa Indonesia.
+    Kamu adalah asisten yang membuat komentar media sosial berbahasa Indonesia.
     
-  //   TUGAS:
-  //   Buat 3 draft komentar untuk sebuah postingan.
+    TUGAS:
+    Buat 3 draft komentar untuk sebuah postingan.
     
-  //   ATURAN WAJIB:
-  //   - Bahasa Indonesia saja.
-  //   - 1–2 kalimat per draft.
-  //   - Sopan, tidak provokatif, tidak menambah klaim/fakta baru.
-  //   - Hindari kata-kata: "Tugas:", "Konteks:", "Output:", "The text...", dan penjelasan meta.
-  //   - Netizen like.
-  //   - Penulisan selayaknya netizen sosial media.
-  //   - Tone: ${tone}
-  //   - Ikuti guideline pengguna.
-  //   - Guideline biasanya panjang dan berisi konteks kasus.
-  //     **FOKUS UTAMA KAMU HANYA PADA BAGIAN "Upaya" DAN POIN-POIN TEMANYA.**
-  //   - Abaikan narasi pembuka, latar belakang, atau opini di luar poin "Upaya".
-  //   - Setiap draft harus merefleksikan salah satu tema dalam bagian "Upaya".
+    ATURAN WAJIB:
+    - Bahasa Indonesia saja.
+    - 1–2 kalimat per draft.
+    - Sopan, tidak provokatif, tidak menambah klaim/fakta baru.
+    - Hindari kata-kata: "Tugas:", "Konteks:", "Output:", "The text...", dan penjelasan meta.
+    - Netizen like.
+    - Penulisan selayaknya netizen sosial media.
+    - Tone: ${tone}
+    - Ikuti guideline pengguna.
+    - Guideline biasanya panjang dan berisi konteks kasus.
+      **FOKUS UTAMA KAMU HANYA PADA BAGIAN "Upaya" DAN POIN-POIN TEMANYA.**
+    - Abaikan narasi pembuka, latar belakang, atau opini di luar poin "Upaya".
     
-  //   INPUT:
-  //   Link (opsional): ${link}
-  //   Konteks (opsional): ${context}
-  //   Guideline:
-  //   ${guideline}
+    INPUT:
+    Guideline:
+    ${guideline}
     
-  //   KELUARAN:
-  //   HANYA tulis JSON valid persis seperti ini (tanpa teks lain):
-  //   {"drafts":["...","...","..."]}
-  //   `.trim();
+    KELUARAN:
+    HANYA tulis JSON valid persis seperti ini (tanpa teks lain):
+    {"drafts":["...","...","..."]}
+    `.trim();
 
 
   let r;
