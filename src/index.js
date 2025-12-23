@@ -113,6 +113,8 @@ async function generateDraftsAI({ env, link, context, guideline, tone }) {
     - 1–2 kalimat per draft.
     - Sopan, tidak provokatif, tidak menambah klaim/fakta baru.
     - Hindari kata-kata: "Tugas:", "Konteks:", "Output:", "The text...", dan penjelasan meta.
+    - Netizen like
+    - Penulisan selayaknya netizen sosial media
     - Tone: ${tone}
     - Ikuti guideline pengguna.
     - Guideline biasanya panjang dan berisi konteks kasus.
