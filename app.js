@@ -27,6 +27,11 @@ const btnClear = $("btnClear");
 const statusEl = $("status");
 const resultsEl = $("results");
 
+const progressWrap = $("progressWrap");
+const progressFill = $("progressFill");
+const progressLabel = $("progressLabel");
+const progressMeta = $("progressMeta");
+
 let selectedPersonas = []; // bisa preset key atau teks custom
 
 function escapeHtml(str) {
