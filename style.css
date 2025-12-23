@@ -170,6 +170,26 @@ button:disabled { opacity: 0.55; cursor: not-allowed; }
   border-color: #111;
 }
 
+/* Chip detail: 2 baris (label + deskripsi) */
+.chipDetail{
+  display:inline-flex;
+  flex-direction:column;
+  gap:2px;
+  text-align:left;
+  line-height:1.2;
+}
+
+.chipTitle{
+  font-weight:900;
+  font-size:13px;
+}
+
+.chipDesc{
+  font-size:11px;
+  color: var(--muted);
+  font-weight:700;
+}
+
 /* ===== Result Cards ===== */
 .card {
   border: 1px solid var(--border);
