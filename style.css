@@ -84,6 +84,13 @@ button {
   cursor: pointer;
 }
 
+button.primary{
+  background:#111;
+  color:#fff;
+  border-color:#111;
+}
+button.primary:hover{ opacity:.92; }
+
 button.secondary {
   background: #fff;
   color: #111;
