@@ -87,7 +87,7 @@ export default {
    AI GENERATOR — PROMPT DIPERTAHANKAN
    ========================================================= */
 async function generateDraftsAI({ env, link, context, guideline, tone }) {
-  const prompt = `
+const prompt = `
 Kamu adalah asisten yang membuat komentar media sosial berbahasa Indonesia.
 
 TUGAS:
@@ -103,11 +103,13 @@ ATURAN WAJIB:
 - Penulisan selayaknya netizen sosial media.
 - Tone: ${tone}
 - Ikuti guideline pengguna.
-- Guideline biasanya panjang dan berisi konteks kasus.
-  FOKUS UTAMA KAMU HANYA PADA BAGIAN "Upaya" DAN POIN-POIN TEMANYA.
-- Abaikan narasi pembuka, latar belakang, atau opini di luar poin "Upaya".
+- Guideline biasanya panjang dan berisi banyak link & instruksi.
+  FOKUS UTAMA KAMU HANYA PADA KALIMAT/PARAGRAF YANG DIAWALI "Diharapkan..." (atau "Diharapkan memberikan...") UNTUK LINK INI.
+- Ambil tema inti dari "Diharapkan..." tersebut dan jadikan dasar komentar.
+- Abaikan pembuka, catatan umum, nomor komentar lain, dan tautan Google Form / laporan bukti.
 
 INPUT:
+Link (opsional): ${link}
 Guideline:
 ${guideline}
 
