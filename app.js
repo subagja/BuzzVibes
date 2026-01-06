@@ -289,7 +289,7 @@ btnGenerate.onclick = async () => {
   const payload = {
     taskText: text,
     personas: selectedPersonas,
-    autoVariation: !!varToggle.checked,
+    // autoVariation: !!varToggle.checked,
   };
 
   try {
