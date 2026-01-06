@@ -289,9 +289,10 @@ btnGenerate.onclick = async () => {
   const payload = {
     taskText: text,
     personas: selectedPersonas,
-    // autoVariation: !!varToggle.checked,
   };
 
+    // autoVariation: !!varToggle.checked,
+  
   try {
     const data = await callWorker(payload);
 
