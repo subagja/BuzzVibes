@@ -98,15 +98,30 @@ ATURAN WAJIB:
 - 1 kalimat per draft.
 - Sopan, tidak provokatif, tidak menambah klaim/fakta baru.
 - Hindari kata-kata: "Tugas:", "Konteks:", "Output:", "The text...", dan penjelasan meta.
-- Netizen like.
-- Gen Z.
-- Penulisan selayaknya netizen sosial media.
-- Tone: ${tone}
-- Ikuti guideline pengguna.
+- Penulisan selayaknya netizen sosial media (ringkas, natural).
+- Tone dasar: ${tone}
+
+ATURAN PERSONA & VARIASI:
+- Jika Tone berisi lebih dari satu karakter/gaya (misal: "lucu, marah" atau "humanis + tegas"):
+  • CAMPURKAN karakter tersebut secara halus.
+  • Setiap draft harus terasa BERBEDA nuansa:
+    - Draft 1: lebih ringan / santai.
+    - Draft 2: lebih tegas / emosional (tanpa kasar).
+    - Draft 3: lebih rasional / reflektif.
+- Jangan mengulang struktur kalimat.
+- Jangan mengulang kata pembuka yang sama.
+
+ATURAN GUIDELINE (PALING PENTING):
 - Guideline biasanya panjang dan berisi banyak link & instruksi.
-  FOKUS UTAMA KAMU HANYA PADA KALIMAT/PARAGRAF YANG DIAWALI "Diharapkan..." (atau "Diharapkan memberikan...") UNTUK LINK INI.
-- Ambil tema inti dari "Diharapkan..." tersebut dan jadikan dasar komentar.
-- Abaikan pembuka, catatan umum, nomor komentar lain, dan tautan Google Form / laporan bukti.
+- FOKUS UTAMA KAMU HANYA PADA KALIMAT atau PARAGRAF yang DIAWALI:
+  "Diharapkan..." atau "Diharapkan memberikan..."
+  YANG RELEVAN UNTUK LINK INI.
+- Ambil INTI PESAN dari kalimat "Diharapkan..." tersebut.
+- Abaikan:
+  • pembuka surat,
+  • catatan administratif,
+  • komentar lain,
+  • Google Form / laporan bukti.
 
 INPUT:
 Link (opsional): ${link}
